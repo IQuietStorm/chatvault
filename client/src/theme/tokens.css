@@ -1,0 +1,121 @@
+/**
+ * ChatVault design tokens — Blue #2563EB / Purple #9333EA.
+ * Light/Dark are data-theme attribute swaps over the same component tree.
+ * --chat-wallpaper is one runtime custom property: changing it re-themes
+ * EVERY chat thread instantly (universal wallpaper, no per-thread setting).
+ */
+:root[data-theme='light'] {
+  --cv-primary: #2563EB;
+  --cv-accent: #9333EA;
+  --cv-primary-soft: #DBEAFE;
+  --cv-accent-soft: #F3E8FF;
+  --cv-brand-gradient: linear-gradient(135deg, #2563EB 0%, #9333EA 100%);
+  --cv-bg-app: #F8FAFC;
+  --cv-bg-surface: #FFFFFF;
+  --cv-bg-incoming: #FFFFFF;
+  --cv-bg-outgoing: var(--cv-brand-gradient);
+  --cv-text-primary: #0F172A;
+  --cv-text-secondary: #64748B;
+  --cv-text-on-brand: #FFFFFF;
+  --cv-border: #E2E8F0;
+  --cv-scrim: rgba(15, 23, 42, 0.45);
+  --cv-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --cv-wallpaper: var(--cv-wallpaper-url, url('https://cdn.chatvault.app/wallpapers/light_default.webp'));
+}
+
+:root[data-theme='dark'] {
+  --cv-primary: #3B82F6;
+  --cv-accent: #A855F7;
+  --cv-primary-soft: #1E3A8A;
+  --cv-accent-soft: #4C1D95;
+  --cv-brand-gradient: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+  --cv-bg-app: #0B1220;
+  --cv-bg-surface: #111A2E;
+  --cv-bg-incoming: #1E293B;
+  --cv-bg-outgoing: var(--cv-brand-gradient);
+  --cv-text-primary: #F1F5F9;
+  --cv-text-secondary: #94A3B8;
+  --cv-text-on-brand: #FFFFFF;
+  --cv-border: #1E293B;
+  --cv-scrim: rgba(0, 0, 0, 0.55);
+  --cv-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --cv-wallpaper: var(--cv-wallpaper-url, url('https://cdn.chatvault.app/wallpapers/dark_default.webp'));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--cv-bg-app);
+  color: var(--cv-text-primary);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* Universal wallpaper: applied to the message-list scroll container in EVERY thread */
+.cv-chat-wallpaper {
+  position: relative;
+  background-image: var(--cv-wallpaper);
+  background-size: cover;
+  background-position: center;
+  background-attachment: local;
+}
+
+.cv-chat-wallpaper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--cv-scrim);
+  pointer-events: none;
+}
+
+.cv-chat-wallpaper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cv-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--cv-brand-gradient);
+  color: var(--cv-text-on-brand);
+}
+
+.cv-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cv-input {
+  width: 100%;
+  border: 1px solid var(--cv-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--cv-bg-surface);
+  color: var(--cv-text-primary);
+  outline: none;
+}
+
+.cv-input:focus {
+  border-color: var(--cv-primary);
+}
+
+.cv-card {
+  background: var(--cv-bg-surface);
+  border: 1px solid var(--cv-border);
+  border-radius: 14px;
+  box-shadow: var(--cv-shadow);
+}

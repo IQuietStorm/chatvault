@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chatvault
+      POSTGRES_PASSWORD: chatvault
+      POSTGRES_DB: chatvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../server/src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatvault -d chatvault"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  coturn:
+    image: coturn/coturn:4.6
+    network_mode: host
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    depends_on:
+      - db
+
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://chatvault:chatvault@db:5432/chatvault
+      REDIS_URL: redis://redis:6379
+      ACCESS_SECRET: ${ACCESS_SECRET:-dev-access-secret}
+      REFRESH_SECRET: ${REFRESH_SECRET:-dev-refresh-secret}
+      S3_BUCKET: ${S3_BUCKET:-chatvault-media}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      TURN_SECRET: ${TURN_SECRET:-change-me-turn-secret}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:

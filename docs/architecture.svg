@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ChatVault architecture topology — Clients → Edge → Services → Data -->
+<svg viewBox="0 0 758 388" width="758" height="388" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <!-- Clients -->
+  <rect x="279" y="16" width="200" height="56" rx="8" fill="#F5F3FF" stroke="#9333EA" stroke-width="1"/>
+  <text x="379" y="37" text-anchor="middle" font-size="14" font-weight="600" fill="#581C87">Clients</text>
+  <text x="379" y="55" text-anchor="middle" font-size="12" fill="#6D28D9">React Native · React Web</text>
+
+  <line x1="379" y1="72" x2="379" y2="92" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="391" y="84" font-size="11" fill="#64748B">REST · WSS · WebRTC</text>
+
+  <!-- Edge -->
+  <rect x="259" y="96" width="240" height="56" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1"/>
+  <text x="379" y="117" text-anchor="middle" font-size="14" font-weight="600" fill="#1E40AF">Edge Layer</text>
+  <text x="379" y="135" text-anchor="middle" font-size="12" fill="#1D4ED8">API Gateway · CDN · WAF</text>
+
+  <line x1="379" y1="152" x2="379" y2="160" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Services container -->
+  <rect x="40" y="160" width="678" height="96" rx="12" fill="none" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="52" y="177" font-size="11" fill="#64748B">API &amp; Real-Time Services · Node.js (NestJS)</text>
+
+  <rect x="49" y="190" width="150" height="54" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1"/>
+  <text x="124" y="209" text-anchor="middle" font-size="13" font-weight="600" fill="#1E40AF">Auth Service</text>
+  <text x="124" y="228" text-anchor="middle" font-size="11" fill="#1D4ED8">JWT · OTP · OAuth</text>
+
+  <rect x="219" y="190" width="150" height="54" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1"/>
+  <text x="294" y="209" text-anchor="middle" font-size="13" font-weight="600" fill="#1E40AF">Chat Service</text>
+  <text x="294" y="228" text-anchor="middle" font-size="11" fill="#1D4ED8">Persist + fan-out</text>
+
+  <rect x="389" y="190" width="150" height="54" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1"/>
+  <text x="464" y="209" text-anchor="middle" font-size="13" font-weight="600" fill="#1E40AF">Media Service</text>
+  <text x="464" y="228" text-anchor="middle" font-size="11" fill="#1D4ED8">Presign · view-once</text>
+
+  <rect x="559" y="190" width="150" height="54" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="1"/>
+  <text x="634" y="209" text-anchor="middle" font-size="13" font-weight="600" fill="#1E40AF">VoIP Signaling</text>
+  <text x="634" y="228" text-anchor="middle" font-size="11" fill="#1D4ED8">SDP · ICE relay</text>
+
+  <!-- fan-out -->
+  <line x1="379" y1="256" x2="379" y2="284" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="129" y1="284" x2="645" y2="284" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="129" y1="284" x2="129" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="301" y1="284" x2="301" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="473" y1="284" x2="473" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="645" y1="284" x2="645" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="49" y="300" width="160" height="56" rx="8" fill="#CCFBF1" stroke="#0D9488" stroke-width="1"/>
+  <text x="129" y="321" text-anchor="middle" font-size="13" font-weight="600" fill="#115E59">PostgreSQL 16</text>
+  <text x="129" y="339" text-anchor="middle" font-size="11" fill="#0F766E">Users · messages</text>
+
+  <rect x="221" y="300" width="160" height="56" rx="8" fill="#CCFBF1" stroke="#0D9488" stroke-width="1"/>
+  <text x="301" y="321" text-anchor="middle" font-size="13" font-weight="600" fill="#115E59">Redis 7</text>
+  <text x="301" y="339" text-anchor="middle" font-size="11" fill="#0F766E">Presence · pub/sub</text>
+
+  <rect x="393" y="300" width="160" height="56" rx="8" fill="#CCFBF1" stroke="#0D9488" stroke-width="1"/>
+  <text x="473" y="321" text-anchor="middle" font-size="13" font-weight="600" fill="#115E59">S3 + CloudFront</text>
+  <text x="473" y="339" text-anchor="middle" font-size="11" fill="#0F766E">Media objects</text>
+
+  <rect x="565" y="300" width="160" height="56" rx="8" fill="#CCFBF1" stroke="#0D9488" stroke-width="1"/>
+  <text x="645" y="321" text-anchor="middle" font-size="13" font-weight="600" fill="#115E59">FCM + APNs</text>
+  <text x="645" y="339" text-anchor="middle" font-size="11" fill="#0F766E">Offline push</text>
+
+  <text x="379" y="378" text-anchor="middle" font-size="11" fill="#94A3B8">WebRTC media flows P2P (TURN fallback) · signaling rides Socket.IO rooms user:{id} / conv:{id}</text>
+</svg>

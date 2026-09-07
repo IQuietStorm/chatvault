@@ -1,0 +1,67 @@
+erDiagram
+    USERS ||--o{ SESSIONS : "devices"
+    USERS ||--o{ MESSAGES : sends
+    USERS ||--o{ MEDIA_ATTACHMENTS : uploads
+    USERS ||--o| USER_PREFERENCES : owns
+    CONVERSATIONS ||--o{ MESSAGES : contains
+    MESSAGES }o--|| MEDIA_ATTACHMENTS : attaches
+    USERS }o--o{ CONVERSATIONS : participates
+
+    USERS {
+        uuid id PK
+        varchar username UK "editable"
+        varchar email UK
+        varchar phone_number UK
+        text password_hash "argon2id, NULL if OAuth-only"
+        jsonb oauth_identities "google/apple"
+        enum gender
+        date date_of_birth
+        boolean is_age_verified
+        text avatar_url
+        jsonb device_location "captured once at registration"
+    }
+    SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid refresh_jti
+        char64 refresh_hash "SHA-256 of jti, raw never stored"
+        enum status "active|revoked|expired"
+        timestamptz expires_at "30d sliding"
+    }
+    CONVERSATIONS {
+        uuid id PK
+        enum type "direct|group"
+        varchar title
+        uuid[] participant_ids "GIN indexed"
+        timestamptz last_message_at
+    }
+    MESSAGES {
+        uuid id PK
+        uuid conversation_id FK
+        uuid sender_id FK
+        enum type "text|media|system"
+        text body "text OR caption"
+        uuid media_attachment_id FK
+        boolean is_view_once
+        uuid[] delivered_to
+        uuid[] read_by
+        uuid client_msg_id "idempotency key, UK(sender,client)"
+    }
+    MEDIA_ATTACHMENTS {
+        uuid id PK
+        uuid uploader_id FK
+        enum kind "image|audio|video|voice_note|document"
+        enum view_policy "standard|view_once"
+        text object_key
+        bigint size_bytes
+        uuid one_time_token "armed for view_once"
+        timestamptz token_expires_at "30s after grant"
+        timestamptz viewed_at
+        timestamptz destructed_at
+    }
+    USER_PREFERENCES {
+        uuid user_id PK/FK
+        text theme "light|dark|system"
+        text chat_wallpaper_url "ONE global wallpaper for all threads"
+        jsonb notification_prefs
+    }

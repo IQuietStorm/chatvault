@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+coverage/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfvars
+!infra/terraform/*.example.tfvars
+crash.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Artifacts
+*.zip
+*.tgz
+*.log
