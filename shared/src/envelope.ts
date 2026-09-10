@@ -134,6 +134,21 @@ export interface SyncPayload {
 /* VoIP signaling — server relays SDP/ICE only; media flows P2P        */
 /* ------------------------------------------------------------------ */
 
+/** Portable SDP/ICE shapes (no DOM lib required on server). */
+export type SdpType = 'offer' | 'answer' | 'pranswer' | 'rollback';
+
+export interface SessionDescriptionInit {
+  type?: SdpType;
+  sdp?: string;
+}
+
+export interface IceCandidateInit {
+  candidate?: string;
+  sdpMid?: string | null;
+  sdpMLineIndex?: number | null;
+  usernameFragment?: string | null;
+}
+
 export type CallKind = 'audio' | 'video';
 
 export interface IceServerConfig {
@@ -147,7 +162,7 @@ export interface CallOfferPayload {
   caller_id: string;
   callee_id: string;
   kind: CallKind;
-  sdp: RTCSessionDescriptionInit;
+  sdp: SessionDescriptionInit;
   ice_servers: IceServerConfig[];
 }
 
@@ -155,13 +170,13 @@ export interface CallAnswerPayload {
   call_id: string;
   caller_id: string;
   callee_id: string;
-  sdp: RTCSessionDescriptionInit;
+  sdp: SessionDescriptionInit;
 }
 
 export interface CallIcePayload {
   call_id: string;
   from: string;
-  candidate: RTCIceCandidateInit;
+  candidate: IceCandidateInit;
 }
 
 export interface CallEndPayload {

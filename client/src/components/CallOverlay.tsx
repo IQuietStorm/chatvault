@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import type { CallIcePayload, IceServerConfig } from '@chatvault/shared';
+import type { CallIcePayload, IceServerConfig, SessionDescriptionInit } from '@chatvault/shared';
 import { randomUUID } from '../lib/id';
 
 interface IncomingCall {
   call_id: string;
   caller_id: string;
   kind: 'audio' | 'video';
-  sdp?: RTCSessionDescriptionInit;
+  sdp?: SessionDescriptionInit;
   ice_servers?: IceServerConfig[];
 }
 
@@ -122,7 +122,7 @@ export function CallOverlay({ socket, myId, peerId }: Props) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         socket.emit('call.offer', { call_id: callId, caller_id: myId, callee_id: peerId, kind, sdp: pc.localDescription });
-        socket.once('call.connected', async (p: { call_id: string; callee_id: string; sdp: RTCSessionDescriptionInit }) => {
+        socket.once('call.connected', async (p: { call_id: string; callee_id: string; sdp: SessionDescriptionInit }) => {
           await pc.setRemoteDescription(p.sdp);
           setActive({ call_id: callId, caller_id: myId, kind });
         });

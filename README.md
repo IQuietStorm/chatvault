@@ -51,6 +51,23 @@ psql "$DATABASE_URL" -f server/src/db/schema.sql
 | Capability | Implementation |
 |---|---|
 | Login | Phone+Password, Phone+OTP, Email+Password, OAuth 2.0 Google/Apple (PKCE) |
+
+### OAuth environment
+
+Set these in the server environment before enabling the provider buttons:
+
+```env
+CLIENT_URL=http://localhost:5173
+OAUTH_STATE_SECRET=replace-with-a-long-random-value
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+APPLE_CLIENT_ID=...
+APPLE_CLIENT_SECRET=...
+APPLE_REDIRECT_URI=http://localhost:3000/api/auth/apple/callback
+```
+
+Register the two callback URLs with Google and Apple exactly as shown for local development. `APPLE_CLIENT_SECRET` must be the provider-issued client secret JWT generated for the Apple service ID.
 | Age rule | `ageAtLastBirthday()` — ≥18 measured at the **last birthday** (month/day compare), enforced client → server → DB CHECK |
 | Sessions | 15-min access JWT + rotating 30-day refresh token, hashed at rest in `sessions`; persists until explicit Logout; reuse detection revokes all devices |
 | Real-time | Socket.IO + Redis adapter; rooms `user:{id}` / `conv:{id}`; `cid` idempotency |

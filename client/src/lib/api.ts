@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
+export const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 export async function api<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const headers: Record<string, string> = {
@@ -6,7 +6,12 @@ export async function api<T>(path: string, init: RequestInit = {}, token?: strin
     ...((init.headers as Record<string, string>) ?? {}),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  } catch {
+    throw new Error(`Unable to reach the ChatVault API at ${API_BASE}. Start the server on port 3000 or set VITE_API_URL.`);
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(body.message ?? res.statusText);

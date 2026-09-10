@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
-import type { MessageNewPayload } from '@chatvault/shared';
+import type { MessageNewPayload, MediaKind } from '@chatvault/shared';
 import { createChatSocket } from '../socket/client';
-import { apiGet, apiPost, apiPatch } from '../lib/api';
+import { apiGet, apiPost } from '../lib/api';
 import { useAuth } from '../store/auth';
 import { useTheme } from '../hooks/useTheme';
 import { MessageBubble } from '../components/MessageBubble';
@@ -18,14 +18,48 @@ interface Conversation {
   last_message_at: string | null;
 }
 
-interface HistoryMsg {
+interface HistoryRow {
   id: string;
+  conversation_id: string;
   sender_id: string;
   type: string;
   body: string | null;
   is_view_once: boolean;
   created_at: string;
-  kind?: string;
+  client_msg_id: string;
+  reply_to_message_id?: string | null;
+  media_attachment_id?: string | null;
+  kind?: MediaKind;
+  mime_type?: string | null;
+  size_bytes?: number | null;
+  view_policy?: 'standard' | 'view_once' | null;
+  duration_ms?: number | null;
+}
+
+function toMessagePayload(row: HistoryRow): MessageNewPayload {
+  return {
+    message_id: row.id,
+    conversation_id: row.conversation_id,
+    sender_id: row.sender_id,
+    type: row.type as MessageNewPayload['type'],
+    body: row.body,
+    is_view_once: row.is_view_once,
+    reply_to_message_id: row.reply_to_message_id,
+    client_msg_id: row.client_msg_id,
+    created_at: row.created_at,
+    ...(row.media_attachment_id && row.kind && row.mime_type && row.size_bytes != null && row.view_policy
+      ? {
+          media: {
+            attachment_id: row.media_attachment_id,
+            kind: row.kind,
+            mime_type: row.mime_type,
+            size_bytes: row.size_bytes,
+            view_policy: row.view_policy,
+            ...(row.duration_ms != null ? { duration_ms: row.duration_ms } : {}),
+          },
+        }
+      : {}),
+  };
 }
 
 export function ChatScreen() {
@@ -34,7 +68,7 @@ export function ChatScreen() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [convs, setConvs] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<HistoryMsg[]>([]);
+  const [messages, setMessages] = useState<MessageNewPayload[]>([]);
   const [draft, setDraft] = useState('');
   const [caption, setCaption] = useState('');
   const [typing, setTyping] = useState<Set<string>>(new Set());
@@ -54,7 +88,7 @@ export function ChatScreen() {
       void apiGet<Conversation[]>('/conversations?limit=50', accessToken).then(setConvs).catch(() => {});
     });
     s.on('message.new', (m: MessageNewPayload) => {
-      setMessages((prev) => (prev.some((x) => x.id === m.message_id) ? prev : [...prev, m]));
+      setMessages((prev) => (prev.some((x) => x.message_id === m.message_id) ? prev : [...prev, m]));
       // Receipts: auto-mark messages from others as read in the active thread.
       if (m.sender_id !== myId && m.conversation_id === activeId && activeId) {
         s.emit('message.read', { conversation_id: activeId, message_ids: [m.message_id] });
@@ -85,8 +119,8 @@ export function ChatScreen() {
   useEffect(() => {
     if (!activeId || !accessToken) return;
     setMessages([]);
-    void apiGet<HistoryMsg[]>(`/conversations/${activeId}/messages?limit=50`, accessToken)
-      .then((rows) => setMessages(rows))
+    void apiGet<HistoryRow[]>(`/conversations/${activeId}/messages?limit=50`, accessToken)
+      .then((rows) => setMessages(rows.map(toMessagePayload)))
       .catch(() => {});
     socket?.emit('conversation.join', { conversation_id: activeId });
   }, [activeId, accessToken, socket]);
@@ -208,7 +242,7 @@ export function ChatScreen() {
         {/* Universal wallpaper applies to this scroll container in every thread */}
         <div className="cv-chat-wallpaper" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, padding: 16 }}>
           {messages.map((m) => (
-            <MessageBubble key={m.id} message={m as MessageNewPayload} own={m.sender_id === myId} socket={socket!} />
+            <MessageBubble key={m.message_id} message={m} own={m.sender_id === myId} socket={socket!} />
           ))}
         </div>
 

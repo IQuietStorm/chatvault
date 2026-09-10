@@ -20,6 +20,20 @@ export const config = {
   refreshTtlDays: Number(process.env.REFRESH_TTL_DAYS ?? 30),
   minAge: Number(process.env.MIN_AGE ?? 18),
   viewOnceTtlSeconds: Number(process.env.VIEW_ONCE_TTL_SECONDS ?? 30),
+  oauth: {
+    clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
+    stateSecret: process.env.OAUTH_STATE_SECRET ?? process.env.ACCESS_SECRET ?? 'dev-oauth-state-secret',
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      redirectUri: process.env.GOOGLE_REDIRECT_URI ?? 'http://localhost:3000/api/auth/google/callback',
+    },
+    apple: {
+      clientId: process.env.APPLE_CLIENT_ID ?? '',
+      clientSecret: process.env.APPLE_CLIENT_SECRET ?? '',
+      redirectUri: process.env.APPLE_REDIRECT_URI ?? 'http://localhost:3000/api/auth/apple/callback',
+    },
+  },
   s3: {
     bucket: process.env.S3_BUCKET ?? 'chatvault-media',
     region: process.env.S3_REGION ?? 'us-east-1',

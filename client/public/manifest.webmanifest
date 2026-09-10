@@ -1,0 +1,17 @@
+{
+  "name": "ChatVault",
+  "short_name": "ChatVault",
+  "description": "Private real-time messaging, view-once media, and calls.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1220",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/chatvault-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

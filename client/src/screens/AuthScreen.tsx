@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { apiPost } from '../lib/api';
+import { apiPost, API_BASE } from '../lib/api';
 import { isAtLeast18 } from '../lib/age';
+import { countries, defaultCountry } from '../lib/countries';
 import { useAuth, type SessionUser } from '../store/auth';
 
 interface RegisterForm {
@@ -25,9 +26,52 @@ export function AuthScreen() {
     full_name: '', username: '', email: '', phone_number: '', password: '',
     gender: 'prefer_not_to_say', date_of_birth: '',
   });
+  const [countryCode, setCountryCode] = useState(defaultCountry.code);
+  const [phoneLocal, setPhoneLocal] = useState('');
+  const [loginForm, setLoginForm] = useState({ identifier: '', password: '' });
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#oauth_error=')) {
+      setError(decodeURIComponent(hash.slice('#oauth_error='.length)));
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+    if (!hash.startsWith('#oauth=')) return;
+    const params = new URLSearchParams(hash.slice('#oauth='.length));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (!accessToken || !refreshToken) {
+      setError('OAuth sign-in returned an incomplete session');
+      return;
+    }
+    let user: SessionUser | undefined;
+    try {
+      const rawUser = params.get('user');
+      user = rawUser ? JSON.parse(rawUser) as SessionUser : undefined;
+    } catch {
+      setError('OAuth sign-in returned an invalid user profile');
+      return;
+    }
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setSession({ access_token: accessToken, refresh_token: refreshToken, user });
+  }, [setSession]);
 
   const set = (k: keyof RegisterForm) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const setPhone = (localNumber: string, selectedCountryCode = countryCode) => {
+    const digits = localNumber.replace(/\D/g, '').replace(/^0+/, '');
+    const country = countries.find((option) => option.code === selectedCountryCode) ?? defaultCountry;
+    setPhoneLocal(localNumber);
+    setForm((f) => ({ ...f, phone_number: digits ? `+${country.dialCode.replace(/\D/g, '')}${digits}` : '' }));
+  };
+
+  const setCountry = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextCountryCode = event.target.value;
+    setCountryCode(nextCountryCode);
+    setPhone(phoneLocal, nextCountryCode);
+  };
 
   /** Browser/Device Geolocation API — captured ONCE at registration with consent. */
   const captureLocation = useCallback(() => {
@@ -73,12 +117,11 @@ export function AuthScreen() {
 
   const login = async (e: FormEvent) => {
     e.preventDefault();
-    const data = new FormData(e.target as HTMLFormElement);
     setError(null);
     setBusy(true);
     try {
       const res = await apiPost<{ access_token: string; refresh_token: string; user?: SessionUser }>('/auth/login', {
-        identifier: data.get('identifier'), password: data.get('password'),
+        identifier: loginForm.identifier, password: loginForm.password,
       });
       setSession({ access_token: res.access_token, refresh_token: res.refresh_token, user: res.user });
     } catch (err: any) {
@@ -88,10 +131,10 @@ export function AuthScreen() {
     }
   };
 
-  /** OAuth 2.0 (Google/Apple) — production flow: PKCE redirect → code exchange → /auth/oauth/:provider. */
+  /** OAuth 2.0 (Google/Apple): the server owns PKCE, code exchange, and token validation. */
   const oauth = (provider: 'google' | 'apple') => {
-    setError(`OAuth ${provider} redirect flow — wire PKCE + IdP client ids from server .env`);
-    // Production: window.location = `${API}/auth/${provider}/login` (redirect dance)
+    setError(null);
+    window.location.assign(`${API_BASE}/auth/${provider}/login`);
   };
 
   return (
@@ -105,8 +148,8 @@ export function AuthScreen() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button className="cv-btn" style={{ flex: 1, background: mode === 'register' ? 'var(--cv-brand-gradient)' : 'var(--cv-bg-subtle, var(--cv-bg-incoming))' }} onClick={() => setMode('register')}>Register</button>
-          <button className="cv-btn" style={{ flex: 1, background: mode === 'login' ? 'var(--cv-brand-gradient)' : 'var(--cv-bg-subtle, var(--cv-bg-incoming))' }} onClick={() => setMode('login')}>Log in</button>
+          <button className="cv-btn" style={{ flex: 1, background: mode === 'register' ? 'var(--cv-brand-gradient)' : 'var(--cv-bg-subtle, var(--cv-bg-incoming))' }} onClick={() => { setMode('register'); setError(null); }}>Register</button>
+          <button className="cv-btn" style={{ flex: 1, background: mode === 'login' ? 'var(--cv-brand-gradient)' : 'var(--cv-bg-subtle, var(--cv-bg-incoming))' }} onClick={() => { setMode('login'); setError(null); }}>Log in</button>
         </div>
 
         {mode === 'register' ? (
@@ -114,7 +157,12 @@ export function AuthScreen() {
             <input className="cv-input" placeholder="Full name *" value={form.full_name} onChange={set('full_name')} required />
             <input className="cv-input" placeholder="Username (a-z, 0-9, _) *" value={form.username} onChange={set('username')} required />
             <input className="cv-input" type="email" placeholder="Email" value={form.email} onChange={set('email')} />
-            <input className="cv-input" type="tel" placeholder="Phone number (E.164)" value={form.phone_number} onChange={set('phone_number')} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select className="cv-input" style={{ width: 150, flexShrink: 0 }} aria-label="Country calling code" value={countryCode} onChange={setCountry}>
+                {countries.map((country) => <option key={country.code} value={country.code}>{country.name} (+{country.dialCode})</option>)}
+              </select>
+              <input className="cv-input" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="Phone number" value={phoneLocal} onChange={(event) => setPhone(event.target.value)} />
+            </div>
             <input className="cv-input" type="password" placeholder="Password" value={form.password} onChange={set('password')} minLength={8} required />
             <div style={{ display: 'flex', gap: 10 }}>
               <input className="cv-input" type="date" max={new Date().toISOString().slice(0, 10)} value={form.date_of_birth} onChange={set('date_of_birth')} required />
@@ -138,8 +186,8 @@ export function AuthScreen() {
           </form>
         ) : (
           <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <input className="cv-input" name="identifier" placeholder="Email or phone number" required />
-            <input className="cv-input" name="password" type="password" placeholder="Password" required />
+            <input className="cv-input" placeholder="Email or phone number" value={loginForm.identifier} onChange={(e) => setLoginForm((f) => ({ ...f, identifier: e.target.value }))} required />
+            <input className="cv-input" type="password" placeholder="Password" value={loginForm.password} onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))} required />
             {error ? <div style={{ color: '#EF4444', fontSize: 13 }}>{error}</div> : null}
             <button className="cv-btn" disabled={busy}>{busy ? 'Signing in…' : 'Log in'}</button>
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>

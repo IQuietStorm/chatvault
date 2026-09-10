@@ -10,9 +10,10 @@ import { CallsGateway } from './calls/calls.gateway';
 import { CallsService } from './calls/calls.service';
 import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
+import { OAuthService } from './auth/oauth.service';
 
 @Module({
   controllers: [AuthController, ChatController, MediaController, UsersController],
-  providers: [AuthService, ChatService, ChatGateway, MediaService, CallsService, CallsGateway, UsersService],
+  providers: [AuthService, OAuthService, ChatService, ChatGateway, MediaService, CallsService, CallsGateway, UsersService],
 })
 export class AppModule {}
